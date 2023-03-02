@@ -40,6 +40,7 @@ print("Model loaded and shipped to device...")
 
 print(f"Reading embeddings from parquet file: {input_filename}")
 
+limit = 100
 name_embedding_df = pq.read_table(input_filename)
 
 print(f"Embeddings count: {len(name_embedding_df)}")
@@ -52,8 +53,7 @@ print(f"Embeddings count: {len(name_embedding_df)}")
 # ]
 
 queries = [
-    "is a gun",
-    "is not a gun"
+    "a photo of a horse"
 ]
 
 text_inputs = tokenizer(queries, padding=True, return_tensors="pt").to(device)
@@ -85,24 +85,43 @@ for name_embedding in name_embedding_df.to_batches():
         torch.matmul(text_features, image_features.t()) * logit_scale
 
         similarity = torch.nn.functional.cosine_similarity(text_features, image_features) * logit_scale
-        #
-        # if processed_count % modulo == 0:
-        #     print(f"Similarity Tensor: {similarity}")
 
-        probs = softmax_model(similarity)
+        # print(f"Name: {name} - Query: {queries[0]} - probs: {similarity}")
 
-        if processed_count % modulo == 0:
-            probs_joined = ",".join([f"{prob:.2%}" for prob in probs])
-            print(f"{processed_count}|{name}|{probs_joined}\n")
 
-            results.append([processed_count, name] + probs.tolist())
-
-        #
-        # outputs = model(**inputs)
-        # logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
-        # probs = logits_per_image.softmax(dim=1)
-
-        processed_count += 1
+#
+# for name_embedding in name_embedding_df.to_batches():
+#     d = name_embedding.to_pydict()
+#     for name, embedding in zip(d['name'], d['embedding']):
+#         a = array.array('f', embedding)
+#
+#         image_features = torch.frombuffer(a, dtype=torch.float32).to(device)
+#
+#         image_features = image_features / image_features.norm(p=2, dim=-1, keepdim=True)
+#
+#         logit_scale = model.logit_scale.exp()
+#
+#         torch.matmul(text_features, image_features.t()) * logit_scale
+#
+#         similarity = torch.nn.functional.cosine_similarity(text_features, image_features) * logit_scale
+#         #
+#         # if processed_count % modulo == 0:
+#         #     print(f"Similarity Tensor: {similarity}")
+#
+#         probs = softmax_model(similarity)
+#
+#         if processed_count % modulo == 0:
+#             probs_joined = ",".join([f"{prob:.2%}" for prob in probs])
+#             print(f"{processed_count}|{name}|{probs_joined}\n")
+#
+#             results.append([processed_count, name] + probs.tolist())
+#
+#         #
+#         # outputs = model(**inputs)
+#         # logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
+#         # probs = logits_per_image.softmax(dim=1)
+#
+#         processed_count += 1
 
 # print(embeddings)
 
